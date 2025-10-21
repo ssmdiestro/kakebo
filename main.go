@@ -8,7 +8,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -105,6 +107,26 @@ func main() {
 	r.GET("/getCategories", func(c *gin.Context) {
 		categories := service.GetCategories()
 		c.JSON(http.StatusOK, categories)
+	})
+
+	r.GET("/getWeekDays", func(c *gin.Context) {
+		month, _ := strconv.Atoi(c.Query("month"))
+		week, _ := strconv.Atoi(c.Query("week"))
+		year, _ := strconv.Atoi(c.Query("year"))
+		weekDays, err := service.WeekDaysInCustomMonth(year, month, week, time.Local)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, weekDays)
+	})
+
+	r.GET("/getWeekReport", func(c *gin.Context) {
+		week, _ := strconv.Atoi(c.Query("week"))
+		month, _ := strconv.Atoi(c.Query("month"))
+		year, _ := strconv.Atoi(c.Query("year"))
+		weekReport := service.GetWeekReport(week, month, year)
+		c.JSON(http.StatusOK, weekReport)
 	})
 
 	if err := r.Run(":8080"); err != nil {

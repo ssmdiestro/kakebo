@@ -60,7 +60,7 @@ func GetRecordById(id string) dto.Record {
 }
 
 func GetRecordByDate(date string) []dto.Record {
-	filter := bson.M{"date.date": date}
+	filter := bson.M{"date.realDate": date}
 	resultList, err := repository.SelectWithError([]dto.Record{}, filter, os.Getenv("RECORD_TABLE"), os.Getenv("KAKEBO_DB"))
 	if err != nil {
 		fmt.Print(err)
@@ -73,7 +73,7 @@ func GetRecordByDate(date string) []dto.Record {
 }
 
 func GetDayReport(date string) dto.DaySummary {
-	filter := bson.M{"date.date": date}
+	filter := bson.M{"date.realDate": date}
 	resultList, err := repository.SelectWithError([]dto.Record{}, filter, os.Getenv("RECORD_TABLE"), os.Getenv("KAKEBO_DB"))
 	if err != nil {
 		fmt.Print(err)
@@ -90,9 +90,59 @@ func GetDayReport(date string) dto.DaySummary {
 	return daySummary
 }
 
+func GetWeekReport(week, month, year int) dto.WeekSummary {
+	weekDays, err := WeekDaysInCustomMonth(year, month, week, time.Local)
+	fmt.Println(weekDays)
+	if err != nil {
+		fmt.Print(err)
+		return dto.WeekSummary{}
+	}
+	dayMap := make(map[int]dto.DaySummary)
+	firstDay := 6
+	lastDay := 0
+	for k, day := range weekDays {
+		daySummary := GetDayReport(day.Format("2006-01-02"))
+		if daySummary.Total > 0 {
+			dayMap[k] = daySummary
+		} else {
+			_, weekISO := day.ISOWeek()
+			dayMap[k] = dto.DaySummary{
+				Date: dto.Date{
+					RealDate:      day.Format("2006-01-02"),
+					ContableMonth: month,
+					Day:           day.Day(),
+					DayOfWeek:     day.Weekday().String(),
+					Year:          day.Year(),
+					WeekOfYear:    weekISO,
+					WeekOfMonth:   week,
+				},
+			}
+		}
+		//get the lower key
+		if k < firstDay {
+			firstDay = k
+		}
+		//get the higher key
+		if k > lastDay {
+			lastDay = k
+		}
+	}
+	weekSummary := dto.WeekSummary{
+		Week:             week,
+		StartDate:        weekDays[firstDay].Format("2006-01-02"),
+		EndDate:          weekDays[lastDay].Format("2006-01-02"),
+		DaySummary:       dayMap,
+		SupervivenciaSum: GetCategoriesSum(dayMap, dto.Supervivencia),
+		OcioYVicioSum:    GetCategoriesSum(dayMap, dto.OcioYVicio),
+		ComprasSum:       GetCategoriesSum(dayMap, dto.Compras),
+	}
+	weekSummary.Total = weekSummary.SupervivenciaSum["total"] + weekSummary.OcioYVicioSum["total"] + weekSummary.ComprasSum["total"]
+	return weekSummary
+}
+
 func getCategorySummary(records []dto.Record, category dto.Category) dto.CategorySummary {
 	categorySummary := dto.CategorySummary{
-		Description: string(category),
+		Description: "",
 		Subcategory: []dto.SubCategorySummary{},
 		Sum:         0,
 	}
@@ -100,6 +150,7 @@ func getCategorySummary(records []dto.Record, category dto.Category) dto.Categor
 	for _, record := range records {
 		if record.Subcategory.Category == category {
 			categorySummary.Sum += record.Amount
+			categorySummary.Description = string(category)
 			newRecord := dto.RecordDTO{
 				Description: record.Description,
 				Amount:      record.Amount,
@@ -123,6 +174,32 @@ func getSum(records []dto.RecordDTO) float64 {
 	var sum float64 = 0
 	for _, record := range records {
 		sum = +record.Amount
+	}
+	return sum
+}
+
+func GetCategoriesSum(dayMap map[int]dto.DaySummary, category dto.Category) map[string]float64 {
+	sum := make(map[string]float64)
+	sum[string("total")] = 0
+	for _, day := range dayMap {
+		if day.Supervivencia.Description == string(category) {
+			for _, v := range day.Supervivencia.Subcategory {
+				sum[v.Description] += v.Sum
+				sum[string("total")] += v.Sum
+			}
+		}
+		if day.OcioYVicio.Description == string(category) {
+			for _, v := range day.OcioYVicio.Subcategory {
+				sum[v.Description] += v.Sum
+				sum[string("total")] += v.Sum
+			}
+		}
+		if day.Compras.Description == string(category) {
+			for _, v := range day.Compras.Subcategory {
+				sum[v.Description] += v.Sum
+				sum[string("total")] += v.Sum
+			}
+		}
 	}
 	return sum
 }

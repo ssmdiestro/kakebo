@@ -32,6 +32,10 @@ services:
     depends_on:
       - mongo
     restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: .
   
   web:
     build:
@@ -40,6 +44,10 @@ services:
       - "5173:80"
     depends_on:
       - app
+    develop:
+      watch:
+        - action: rebuild
+          path: ./frontend
 
 volumes:
   mongo_data:

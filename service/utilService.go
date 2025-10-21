@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -100,4 +101,63 @@ func minTime(a, b time.Time) time.Time {
 		return a
 	}
 	return b
+}
+
+// WeekDaysInCustomMonth devuelve los días (nombre→fecha) de la semana 'week'
+// del mes contable 'month' (1..12) en 'year'.
+// El mes contable va del 24 del mes anterior al 23 del mes indicado.
+// Las semanas son ISO (lunes→domingo) y se intersectan con la ventana 24–23.
+// Ej.: (2025, 11, 1) -> {"Viernes":"2025-10-24","Sábado":"2025-10-25","Domingo":"2025-10-26"}
+func WeekDaysInCustomMonth(year, month, week int, loc *time.Location) (map[int]time.Time, error) {
+	if loc == nil {
+		loc = time.Local
+	}
+	if month < 1 || month > 12 || week < 1 {
+		return nil, fmt.Errorf("parámetros inválidos (month=1..12, week>=1)")
+	}
+
+	// Ventana del mes contable: [24 del mes-1, 23 del mes]
+	winStart, winEnd := customMonthWindow(year, time.Month(month), loc)
+
+	// Lunes de la semana 1 (la que contiene el 24 del mes-1)
+	firstWeekStart := mondayOfWeek(winStart, loc)
+
+	// Lunes y domingo de la semana solicitada
+	weekStart := firstWeekStart.AddDate(0, 0, (week-1)*7)
+	weekEnd := weekStart.AddDate(0, 0, 6)
+
+	// Si la semana está completamente antes/después de la ventana, no existe
+	if weekStart.After(winEnd) || weekEnd.Before(winStart) {
+		return nil, fmt.Errorf("la semana %d no existe en el mes contable %02d/%d", week, month, year)
+	}
+
+	// Intersección real con la ventana
+	start := maxTime(weekStart, winStart)
+	end := minTime(weekEnd, winEnd)
+
+	esWeekday := func(w time.Weekday) int {
+		switch w {
+		case time.Monday:
+			return 0
+		case time.Tuesday:
+			return 1
+		case time.Wednesday:
+			return 2
+		case time.Thursday:
+			return 3
+		case time.Friday:
+			return 4
+		case time.Saturday:
+			return 5
+		default:
+			return 6
+		}
+	}
+
+	out := make(map[int]time.Time)
+	for day := start; !day.After(end); day = day.AddDate(0, 0, 1) {
+		key := esWeekday(day.Weekday())
+		out[key] = day
+	}
+	return out, nil
 }
