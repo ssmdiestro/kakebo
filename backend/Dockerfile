@@ -16,4 +16,4 @@ RUN go env -w GOPROXY=https://proxy.golang.org,direct && go mod download
 # Puedes copiarlo si quieres: COPY . .
 
 # Ejecuta la app en caliente
-CMD ["go", "run", "main.go"]
+CMD ["go", "run", "./cmd/api/main.go"]
