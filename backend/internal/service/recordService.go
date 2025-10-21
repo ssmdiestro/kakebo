@@ -59,7 +59,6 @@ func (s *Service) GetDayReport(ctx context.Context, date string) (dto.DaySummary
 
 func (s *Service) GetWeekReport(ctx context.Context, week, month, year int) (dto.WeekSummary, error) {
 	weekDays, err := WeekDaysInCustomMonth(year, month, week, time.Local)
-	fmt.Println(weekDays)
 	if err != nil {
 		fmt.Print(err)
 		return dto.WeekSummary{}, err
@@ -75,17 +74,31 @@ func (s *Service) GetWeekReport(ctx context.Context, week, month, year int) (dto
 		if daySummary.Total > 0 {
 			dayMap[k] = daySummary
 		} else {
-			_, weekISO := day.ISOWeek()
-			dayMap[k] = dto.DaySummary{
-				Date: dto.Date{
-					RealDate:      day.Format("2006-01-02"),
-					ContableMonth: month,
-					Day:           day.Day(),
-					DayOfWeek:     day.Weekday().String(),
-					Year:          day.Year(),
-					WeekOfYear:    weekISO,
-					WeekOfMonth:   week,
-				},
+			if day.Year() == 2999 {
+				dayMap[k] = dto.DaySummary{
+					Date: dto.Date{
+						RealDate:      day.Format("2006-01-02"),
+						ContableMonth: month,
+						Day:           day.Day(),
+						DayOfWeek:     time.Weekday((k + 1) % 7).String(),
+						Year:          day.Year(),
+						WeekOfYear:    0,
+						WeekOfMonth:   0,
+					},
+				}
+			} else {
+				_, weekISO := day.ISOWeek()
+				dayMap[k] = dto.DaySummary{
+					Date: dto.Date{
+						RealDate:      day.Format("2006-01-02"),
+						ContableMonth: month,
+						Day:           day.Day(),
+						DayOfWeek:     day.Weekday().String(),
+						Year:          day.Year(),
+						WeekOfYear:    weekISO,
+						WeekOfMonth:   week,
+					},
+				}
 			}
 		}
 		//get the lower key
@@ -93,7 +106,7 @@ func (s *Service) GetWeekReport(ctx context.Context, week, month, year int) (dto
 			firstDay = k
 		}
 		//get the higher key
-		if k > lastDay {
+		if k > lastDay && day.Year() != 2999 {
 			lastDay = k
 		}
 	}

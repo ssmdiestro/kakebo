@@ -131,33 +131,18 @@ func WeekDaysInCustomMonth(year, month, week int, loc *time.Location) (map[int]t
 		return nil, fmt.Errorf("la semana %d no existe en el mes contable %02d/%d", week, month, year)
 	}
 
-	// Intersección real con la ventana
-	start := maxTime(weekStart, winStart)
-	end := minTime(weekEnd, winEnd)
+	// Mapa con los 7 días de la semana
+	out := make(map[int]time.Time)
 
-	esWeekday := func(w time.Weekday) int {
-		switch w {
-		case time.Monday:
-			return 0
-		case time.Tuesday:
-			return 1
-		case time.Wednesday:
-			return 2
-		case time.Thursday:
-			return 3
-		case time.Friday:
-			return 4
-		case time.Saturday:
-			return 5
-		default:
-			return 6
+	for i := 0; i < 7; i++ {
+		currentDay := weekStart.AddDate(0, 0, i)
+		if currentDay.Before(winStart) || currentDay.After(winEnd) {
+			// Día fuera del rango → mismo mes/día, pero año 2999
+			out[i] = time.Date(2999, currentDay.Month(), currentDay.Day(), 0, 0, 0, 0, loc)
+		} else {
+			out[i] = currentDay
 		}
 	}
 
-	out := make(map[int]time.Time)
-	for day := start; !day.After(end); day = day.AddDate(0, 0, 1) {
-		key := esWeekday(day.Weekday())
-		out[key] = day
-	}
 	return out, nil
 }
