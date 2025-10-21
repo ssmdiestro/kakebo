@@ -22,7 +22,7 @@ export default function Home() {
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-        <NewRecordForm onSuccess={() => setOpen(false)} />
+        <NewRecordForm onSuccess={() => setOpen(false)} onCancel={() => setOpen(false)} />
       </Modal>
     </div>
   );
