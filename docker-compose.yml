@@ -20,13 +20,13 @@ services:
   app:
     container_name: go-api
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
       target: dev
     volumes:
-      - .:/app
+      - ./backend:/app
     env_file:
-      - .env
+      - ./backend/.env
     ports:
       - "8080:8080"
     depends_on:
@@ -35,7 +35,7 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: .
+          path: ./backend
   
   web:
     build:
@@ -44,10 +44,6 @@ services:
       - "5173:80"
     depends_on:
       - app
-    develop:
-      watch:
-        - action: rebuild
-          path: ./frontend
 
 volumes:
   mongo_data:
