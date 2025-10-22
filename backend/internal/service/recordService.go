@@ -123,6 +123,44 @@ func (s *Service) GetWeekReport(ctx context.Context, week, month, year int) (dto
 	return weekSummary, nil
 }
 
+func (s *Service) GetMonthReport(ctx context.Context, month, year int) (dto.MonthSummary, error) {
+	monthSummary := dto.MonthSummary{}
+	monthSummary.Month = month
+	monthSummary.MonthName = time.Month(month).String()
+	monthSummary.Year = year
+	monthSummary.WeekSums = make(map[int]dto.WeekSums)
+	monthSummary.SupervivenciaTotal = make(map[string]float64)
+	monthSummary.OcioYVicioTotal = make(map[string]float64)
+	monthSummary.ComprasTotal = make(map[string]float64)
+	total := 0.0
+	for week := 1; week <= 5; week++ {
+		weekReports, err := s.GetWeekReport(ctx, week, month, year)
+		if err != nil {
+			return dto.MonthSummary{}, err
+		}
+		weekSum := dto.WeekSums{
+			Week:             week,
+			SupervivenciaSum: weekReports.SupervivenciaSum,
+			OcioYVicioSum:    weekReports.OcioYVicioSum,
+			ComprasSum:       weekReports.ComprasSum,
+			Total:            weekReports.Total,
+		}
+		for k, v := range weekReports.SupervivenciaSum {
+			monthSummary.SupervivenciaTotal[k] += v
+		}
+		for k, v := range weekReports.OcioYVicioSum {
+			monthSummary.OcioYVicioTotal[k] += v
+		}
+		for k, v := range weekReports.ComprasSum {
+			monthSummary.ComprasTotal[k] += v
+		}
+		total += weekReports.Total
+		monthSummary.WeekSums[week] = weekSum
+	}
+	monthSummary.Total = total
+	return monthSummary, nil
+}
+
 func (s *Service) getCategorySummary(records []dto.Record, category dto.Category) (dto.CategorySummary, error) {
 	categorySummary := dto.CategorySummary{
 		Description: "",

@@ -40,6 +40,7 @@ func NewRouter(svc *service.Service) *gin.Engine {
 	// --- REPORTS ---
 	v1.GET("/getDayReport/:date", controllers.GetDayReport(svc))
 	v1.GET("/getWeekReport", controllers.GetWeekReport(svc))
+	v1.GET("/getMonthReport", controllers.GetMonthReport(svc))
 	v1.GET("/getWeekDays", controllers.GetWeekDays(svc))
 	v1.GET("/getWeek/:date", controllers.GetWeekLimits(svc))
 

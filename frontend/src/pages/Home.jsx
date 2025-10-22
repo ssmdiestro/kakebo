@@ -1,9 +1,9 @@
-// Home.jsx
 import { useEffect, useMemo, useState, useCallback } from "react";
 import WeekBoard from "../components/WeekBoard";
-import { fetchWeekLimitsByDate } from "../api/week";
+import { fetchWeekLimitsByDate } from "../api/endpoints";
 import Modal from "../components/Modal";
 import NewRecordForm from "../components/NewRecordForm";
+import MonthTotals from "../components/MonthTotals";
 
 function formatLocalYYYYMMDD(d = new Date()) {
   const y = d.getFullYear();
@@ -37,6 +37,7 @@ export default function Home() {
         const month = json.month ?? json.Month;
         const startDate = json.startDate ?? json.StartDate;
         const endDate = json.endDate ?? json.EndDate;
+        const monthName = json.monthName ?? json.MonthName;
 
         if (week == null || month == null) {
           throw new Error(`Respuesta sin week/month: ${JSON.stringify(json)}`);
@@ -47,6 +48,7 @@ export default function Home() {
           month: Number(month),
           startDate,
           endDate,
+          monthName,
         });
         setError(null);
       } catch (e) {
@@ -71,12 +73,16 @@ export default function Home() {
         style={{
           padding: "12px 18px", borderRadius: 12, border: "none",
           background: "linear-gradient(135deg, #10b981, #06b6d4)",
-          color: "#fff", cursor: "pointer", boxShadow: "0 8px 20px rgba(16,185,129,.3)"
+          color: "#fff", cursor: "pointer", boxShadow: "0 8px 20px rgba(16,185,129,.3)",
+          position: "fixed",
+          bottom: 10,
+          right: 10,
+          zIndex: 1000
         }}
       >
-        ➕ Nuevo registro
+        ➕
       </button>
-
+      <h1 style={{ textAlign: "center", marginBottom: 10, marginTop: 10 }}> {limits.monthName} - {currentYear}</h1>
       {/* ✅ Pasa refreshKey a todos los WeekBoard para que se re-fetchen */}
       <WeekBoard week={1} month={limits.month} year={currentYear} refreshKey={refreshKey} />
       <WeekBoard week={2} month={limits.month} year={currentYear} refreshKey={refreshKey} />
@@ -84,6 +90,7 @@ export default function Home() {
       <WeekBoard week={4} month={limits.month} year={currentYear} refreshKey={refreshKey} />
       <WeekBoard week={5} month={limits.month} year={currentYear} refreshKey={refreshKey} />
 
+      {<MonthTotals month={limits.month} year={currentYear} refreshKey={refreshKey} />}
       <Modal open={open} onClose={() => setOpen(false)}>
         <NewRecordForm
           onSuccess={() => {

@@ -19,6 +19,24 @@ type DaySummary struct {
 	Total         float64         `json:"total" bson:"total"`
 }
 
+type MonthSummary struct {
+	Month              int                `json:"month" bson:"month"`
+	MonthName          string             `json:"monthName" bson:"monthName"`
+	Year               int                `json:"year" bson:"year"`
+	WeekSums           map[int]WeekSums   `json:"weekSums" bson:"weekSums"`
+	SupervivenciaTotal map[string]float64 `json:"supervivenciaTotal" bson:"supervivenciaTotal"`
+	OcioYVicioTotal    map[string]float64 `json:"ocioyvicioTotal" bson:"ocioyvicioTotal"`
+	ComprasTotal       map[string]float64 `json:"comprasTotal" bson:"comprasTotal"`
+	Total              float64            `json:"total" bson:"total"`
+}
+
+type WeekSums struct {
+	Week             int                `json:"week" bson:"week"`
+	SupervivenciaSum map[string]float64 `json:"supervivenciaSum" bson:"supervivenciaSum"`
+	OcioYVicioSum    map[string]float64 `json:"ocioyvicioSum" bson:"ocioyvicioSum"`
+	ComprasSum       map[string]float64 `json:"comprasSum" bson:"comprasSum"`
+	Total            float64            `json:"total" bson:"total"`
+}
 type CategorySummary struct {
 	Description string               `json:"description,omitempty" bson:"description,omitempty"`
 	Subcategory []SubCategorySummary `json:"subcategory,omitempty" bson:"subcategory,omitempty"`
@@ -40,6 +58,7 @@ type RecordDTO struct {
 type WeekLimits struct {
 	Week      int    `json:"week" bson:"week"`
 	Month     int    `json:"month" bson:"month"`
+	MonthName string `json:"monthName" bson:"monthName"`
 	StartDate string `json:"startDate" bson:"startDate"`
 	EndDate   string `json:"endDate" bson:"endDate"`
 }

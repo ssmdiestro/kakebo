@@ -45,6 +45,7 @@ func GetWeekLimits(svc *service.Service) gin.HandlerFunc {
 		resp := dto.WeekLimits{
 			Week:      w,
 			Month:     m,
+			MonthName: time.Month(m).String(),
 			StartDate: s.Format("2006-01-02"),
 			EndDate:   e.Format("2006-01-02"),
 		}
@@ -78,5 +79,18 @@ func GetWeekReport(svc *service.Service) gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, weekReport)
+	}
+}
+
+func GetMonthReport(svc *service.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		month, _ := strconv.Atoi(c.Query("month"))
+		year, _ := strconv.Atoi(c.Query("year"))
+		monthReport, err := svc.GetMonthReport(c.Request.Context(), month, year)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, monthReport)
 	}
 }
