@@ -62,7 +62,7 @@ export default function WeekBoard({ week, month, year, refreshKey }) {
     return base;
   }, [days]);
 
-  if (loading) return <div style={wrap}>Cargando…</div>;
+  if (loading) return <div style={wrap}></div>;
   if (err) return <div style={wrap}><span style={{ color: "crimson" }}>Error:</span> {err}</div>;
   if (!data) return null;
 
@@ -164,7 +164,7 @@ function flattenRecords(categorySummary) {
 }
 
 // --- estilos ---
-const boardWrap = { padding: 12, background: "#0b0b0b", color: "#121212", borderRadius: 12, scale: "100%" };
+const boardWrap = { padding: 12, background: "#0b0b0b", color: "#121212", borderRadius: 12, scale: "80%" };
 const gridDays = {
   display: "grid",
   gridAutoFlow: "column",

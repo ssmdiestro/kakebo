@@ -64,5 +64,5 @@ export default function MonthTotals({ month, year, refreshKey }) {
         return res;
     }, [data]);
 
-    return <div>totalSupervivencia:</div>;
+    return <div></div>;
 }
